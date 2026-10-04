@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}World map{% endblock %}
+{% block content %}
+<h1 class="px text-base leading-relaxed mb-2">Choose a dungeon</h1>
+<p class="mb-5 text-xl">Each rumor monster is a real viral claim. Fight it with live evidence from Google, powered by SerpApi.</p>
+<div class="panel p-3 mb-6 flex flex-wrap items-center gap-3">
+  <label for="hero" class="text-xl">Hero name</label>
+  <input id="hero" maxlength="40" value="{{ hud.player_name }}" class="bg-slate-900 border-2 border-emerald-500/40 px-2 py-1 text-xl text-emerald-300">
+  <button id="rename" class="btn">Save name</button>
+  <span class="ml-auto text-xl">Cleared: {{ hud.dungeons_cleared }}</span>
+</div>
+<div class="grid md:grid-cols-3 gap-5">
+{% for z in zones %}
+  <section class="panel p-4">
+    <div class="text-4xl">{{ z.badge_icon }}</div>
+    <h2 class="px text-xs leading-relaxed mt-2">{{ z.name }}</h2>
+    <p class="text-lg my-2">{{ z.description }}</p>
+    <p class="text-amber-300">Danger: {% for i in "123" %}{% if forloop.counter <= z.danger_level %}★{% else %}☆{% endif %}{% endfor %}</p>
+    <ul class="mt-3 space-y-2">
+    {% for m in z.monsters.all %}
+      <li><a class="btn block" href="{% url 'battle' m.id %}">{{ m.icon }} Fight {{ m.name }}</a></li>
+    {% endfor %}
+    </ul>
+  </section>
+{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('rename').onclick = async () => {
+  try { const d = await FX.api('{% url "rename" %}', { name: document.getElementById('hero').value });
+    FX.hud(d.player); FX.beep(660); FX.floatText('SAVED', document.getElementById('rename')); } catch (e) { alert(e.message); }
+};
+</script>
+{% endblock %}

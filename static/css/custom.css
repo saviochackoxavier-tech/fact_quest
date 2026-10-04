@@ -1,0 +1,21 @@
+body { font-family: 'VT323', ui-monospace, monospace; font-size: 20px; }
+.px { font-family: 'Press Start 2P', monospace; }
+.crt::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+.panel { border: 2px solid rgba(16,185,129,.4); box-shadow: 0 0 15px rgba(16,185,129,.2); background: rgba(2,6,23,.85); }
+.bar { height: 14px; border: 2px solid rgba(16,185,129,.5); background: #020617; }
+.bar > i { display: block; height: 100%; transition: width .5s ease; }
+.btn { border: 2px solid #10b981; padding: .5rem 1rem; transition: all .15s; cursor: pointer; }
+.btn:hover:not(:disabled) { background: #10b981; color: #020617; box-shadow: 0 0 18px rgba(16,185,129,.6); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.float-text { position: fixed; z-index: 60; pointer-events: none; font-family: 'Press Start 2P', monospace; font-size: 14px;
+  animation: floatup 1.2s ease-out forwards; }
+@keyframes floatup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-70px); } }
+.flash { position: fixed; inset: 0; z-index: 55; pointer-events: none; animation: flashout .35s ease-out forwards; }
+@keyframes flashout { from { opacity: .45; } to { opacity: 0; } }
+.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.blink { animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .blink, .shake, .float-text { animation: none; } .bar > i { transition: none; } }
+:focus-visible { outline: 2px dashed #34d399; outline-offset: 2px; }

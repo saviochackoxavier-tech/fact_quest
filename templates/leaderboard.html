@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+<h1 class="px text-base leading-relaxed mb-4">Leaderboard</h1>
+<div class="panel overflow-x-auto">
+<table class="w-full text-xl text-left">
+  <thead class="text-amber-300"><tr><th class="p-3">Rank</th><th class="p-3">Hero</th><th class="p-3">Score</th><th class="p-3">Last played</th></tr></thead>
+  <tbody>
+  {% for e in entries %}
+    <tr class="border-t border-emerald-500/20"><td class="p-3">{{ forloop.counter }}</td><td class="p-3">{{ e.player_name }}</td><td class="p-3">{{ e.score }}</td><td class="p-3">{{ e.timestamp|date:"d M Y, H:i" }}</td></tr>
+  {% empty %}
+    <tr><td colspan="4" class="p-4">No scores yet. Defeat a rumor on the <a class="underline" href="{% url 'map' %}">map</a> to claim rank 1.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

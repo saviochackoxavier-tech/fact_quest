@@ -1,0 +1,35 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="{{ csrf_token }}">
+<title>{% block title %}Fact-Quest{% endblock %} | The Disinformation Dungeon</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+</head>
+<body class="bg-slate-950 text-emerald-400 font-mono min-h-screen crt">
+<header class="panel m-3 p-3">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <a href="{% url 'map' %}" class="px text-sm text-emerald-300">FACT-QUEST</a>
+    <nav class="flex gap-4 text-lg">
+      <a class="hover:text-white" href="{% url 'map' %}">Map</a>
+      <a class="hover:text-white" href="{% url 'custom' %}">Custom arena</a>
+      <a class="hover:text-white" href="{% url 'leaderboard' %}">Leaderboard</a>
+    </nav>
+    <div class="flex flex-wrap items-center gap-4 text-lg">
+      <span id="hud-name">{{ hud.player_name }}</span>
+      <span>LV <b id="hud-level">{{ hud.level }}</b></span>
+      <div class="w-32"><div class="flex justify-between"><span>HP</span><b id="hud-hp">{{ hud.hp }}</b></div>
+        <div class="bar" id="hud-hpbar"><i style="width:{{ hud.hp }}%"></i></div></div>
+      <div class="w-32"><div class="flex justify-between"><span>XP</span><b id="hud-xp">{{ hud.xp }}</b></div>
+        <div class="bar" id="hud-xpbar" data-pct="{% widthratio hud.xp 1 1 %}"><i></i></div></div>
+    </div>
+  </div>
+</header>
+<main class="max-w-5xl mx-auto p-4">{% block content %}{% endblock %}</main>
+<script src="{% static 'js/game_fx.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

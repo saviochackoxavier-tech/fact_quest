@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Custom arena{% endblock %}
+{% block content %}
+<h1 class="px text-base leading-relaxed mb-2">Custom claim arena</h1>
+<p class="text-xl mb-4">Paste any headline, claim or URL. A monster spawns from the live search evidence and fights an automatic battle.</p>
+<div class="panel p-4">
+  <textarea id="claim" rows="3" maxlength="300" class="w-full bg-slate-900 border-2 border-emerald-500/40 p-2 text-xl text-emerald-200" placeholder="e.g. Government to ban all 500 rupee notes from next month"></textarea>
+  <button id="go" class="btn mt-3">Spawn monster</button>
+</div>
+<div id="out" class="mt-5 text-xl"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const out = document.getElementById('out'), go = document.getElementById('go');
+go.onclick = async () => {
+  go.disabled = true; FX.loading(out); FX.beep(300);
+  try {
+    const d = await FX.api('{% url "custom_scan" %}', { claim: document.getElementById('claim').value });
+    const col = d.truth_score <= 35 ? 'text-red-400' : d.truth_score <= 65 ? 'text-amber-300' : 'text-emerald-300';
+    out.innerHTML = `
+      ${d.api_ok ? '' : `<p class="text-red-400 mb-3">Search failed: ${FX.esc(d.api_error)}</p>`}
+      <div class="panel p-4 mb-4"><div class="flex items-center gap-4"><div class="text-6xl">${d.monster.icon}</div>
+        <div><div class="px text-xs leading-relaxed">${FX.esc(d.monster.name)}</div><p class="text-2xl text-white">"${FX.esc(d.monster.claim)}"</p>
+        <p class="${col}">Truth score ${d.truth_score}/100: ${FX.esc(d.verdict)}</p></div></div>
+        <div class="bar mt-3" id="mb"><i style="width:100%;background:#ef4444"></i></div></div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <section class="panel p-4"><h2 class="px text-xs mb-3">Battle simulation</h2><div id="sim" class="space-y-1"></div></section>
+        <section class="panel p-4"><h2 class="px text-xs mb-3">Sources</h2>${d.sources.map(s => `<p class="mb-2"><a class="underline text-sky-300" target="_blank" rel="noopener" href="${FX.safeUrl(s.link)}">${FX.esc(s.title)}</a><br><span class="text-slate-300">${FX.esc(s.snippet)}</span></p>`).join('') || 'No sources returned.'}</section>
+      </div>`;
+    const sim = document.getElementById('sim');
+    for (const r of d.rounds) {
+      await new Promise(res => setTimeout(res, 600));
+      sim.insertAdjacentHTML('beforeend', `<div>> ${r.action} deals ${r.damage}. Monster HP ${r.monster_hp}</div>`);
+      FX.setBar('mb', r.monster_hp, '#ef4444'); FX.flash('#10b981'); FX.beep(500);
+    }
+    sim.insertAdjacentHTML('beforeend', `<div class="${d.won ? 'text-emerald-300' : 'text-amber-300'}">> ${d.won ? 'Monster defeated!' : 'The monster escaped into the feed.'}</div>`);
+    if (d.xp_gain) FX.floatText('+' + d.xp_gain + ' XP', document.getElementById('hud-xp'), '#38bdf8');
+    FX.hud(d.player);
+  } catch (e) { out.innerHTML = `<span class="text-red-400">${FX.esc(e.message)}</span>`; }
+  go.disabled = false;
+};
+</script>
+{% endblock %}

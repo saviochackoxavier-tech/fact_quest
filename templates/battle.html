@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Battle{% endblock %}
+{% block content %}
+<div class="panel p-4 mb-5" id="monster-card">
+  <div class="flex items-center gap-4">
+    <div class="text-6xl" id="monster-icon">{{ monster.icon }}</div>
+    <div class="flex-1">
+      <h1 class="px text-xs leading-relaxed">{{ monster.name }} <span class="text-amber-300">({{ monster.monster_type }}, tier {{ monster.difficulty }})</span></h1>
+      <p class="text-2xl text-white my-2">"{{ monster.claim_text }}"</p>
+      <div class="flex justify-between"><span>Monster HP</span><b id="mhp-num">100</b></div>
+      <div class="bar" id="mhp-bar"><i style="width:100%;background:#ef4444"></i></div>
+    </div>
+  </div>
+</div>
+<div class="grid sm:grid-cols-3 gap-3 mb-5">
+  <button class="btn act" data-a="probe">🔎 Source probe</button>
+  <button class="btn act" data-a="crossref">⚖️ Cross-reference</button>
+  <button class="btn act" data-a="datecheck">📅 Date check</button>
+</div>
+<div class="grid md:grid-cols-2 gap-5">
+  <section class="panel p-4"><h2 class="px text-xs mb-3">Evidence</h2><div id="evidence" class="text-lg">Choose an action to query live search results.</div></section>
+  <section class="panel p-4"><h2 class="px text-xs mb-3">Battle log</h2><div id="log" class="text-lg space-y-1 max-h-80 overflow-y-auto"></div></section>
+</div>
+<div id="end" class="panel p-4 mt-5 hidden text-center text-2xl"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const URL_ACT = '{% url "battle_action" monster.id %}';
+const ev = document.getElementById('evidence'), log = document.getElementById('log');
+const btns = [...document.querySelectorAll('.act')];
+const addLog = (t, c = 'text-emerald-300') => { const d = document.createElement('div'); d.className = c; d.textContent = '> ' + t; log.prepend(d); };
+function render(e) {
+  if (e.kind === 'probe') return e.items.length ? e.items.map(i => `<p class="mb-2"><a class="underline text-sky-300" target="_blank" rel="noopener" href="${FX.safeUrl(i.link)}">${FX.esc(i.title)}</a></p>`).join('') : 'No sources returned.';
+  if (e.kind === 'crossref') return `<p class="text-2xl mb-2 ${e.truth_score <= 35 ? 'text-red-400' : e.truth_score <= 65 ? 'text-amber-300' : 'text-emerald-300'}">Truth score ${e.truth_score}/100<br>${FX.esc(e.verdict)}</p>` + e.snippets.map(s => `<p class="mb-2 text-slate-300">${FX.esc(s)}</p>`).join('');
+  return `<p class="mb-2">Years mentioned: ${e.years.length ? e.years.join(', ') : 'none found'}</p>` + e.snippets.map(s => `<p class="mb-2 text-slate-300">${FX.esc(s)}</p>`).join('');
+}
+btns.forEach(b => b.onclick = async () => {
+  btns.forEach(x => x.disabled = true);
+  FX.loading(ev); FX.beep(300);
+  try {
+    const d = await FX.api(URL_ACT, { action: b.dataset.a });
+    ev.innerHTML = (d.api_ok ? '' : `<p class="text-red-400 mb-2">Search failed: ${FX.esc(d.api_error)}. Reduced damage applied.</p>`) + render(d.evidence);
+    FX.setBar('mhp-bar', d.monster_hp, '#ef4444'); document.getElementById('mhp-num').textContent = d.monster_hp;
+    FX.flash('#10b981'); FX.shake(document.getElementById('monster-icon')); FX.floatText('-' + d.damage, document.getElementById('monster-icon'), '#f87171'); FX.beep(520);
+    addLog(`${b.textContent.trim()} hits for ${d.damage}.`);
+    if (d.counter) { addLog(`Monster strikes back for ${d.counter}.`, 'text-red-400'); setTimeout(() => { FX.flash('#ef4444'); FX.beep(160, 160); }, 300); }
+    FX.hud(d.player);
+    const end = document.getElementById('end');
+    if (d.state === 'win') {
+      FX.floatText('+' + d.xp_gain + ' XP', document.getElementById('hud-xp'), '#38bdf8'); FX.beep(880, 250);
+      end.innerHTML = `Rumor busted! +${d.xp_gain} XP<br><a class="btn inline-block mt-3" href="{% url 'map' %}">Back to map</a>`; end.classList.remove('hidden'); return;
+    }
+    if (d.state === 'lose') {
+      addLog('You fell. HP restored, -10 XP. The monster healed.', 'text-amber-300');
+      FX.setBar('mhp-bar', 100, '#ef4444'); document.getElementById('mhp-num').textContent = 100;
+    }
+  } catch (e) { ev.innerHTML = `<span class="text-red-400">${FX.esc(e.message)}</span>`; }
+  btns.forEach(x => x.disabled = false);
+});
+</script>
+{% endblock %}
